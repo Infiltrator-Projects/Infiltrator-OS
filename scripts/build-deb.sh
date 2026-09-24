@@ -18,7 +18,7 @@ install -m 0755 "$ROOT/debian/prerm" "$PKGROOT/DEBIAN/prerm"
 install -m 0644 "$ROOT/plymouth/infiltrator-os.plymouth" "$THEME_DIR/infiltrator-os.plymouth"
 install -m 0644 "$ROOT/plymouth/infiltrator-os.script" "$THEME_DIR/infiltrator-os.script"
 
-cat "$ROOT"/assets/infiltrator-os.png.b64.part-* | base64 -d > "$THEME_DIR/infiltrator-os.png"
+cat "$ROOT"/assets/infiltrator-os.png.b64.chunk-* | base64 -d > "$THEME_DIR/infiltrator-os.png"
 chmod 0644 "$THEME_DIR/infiltrator-os.png"
 
 PNG_TYPE="$(file -b --mime-type "$THEME_DIR/infiltrator-os.png")"

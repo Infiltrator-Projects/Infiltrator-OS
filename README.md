@@ -8,11 +8,11 @@ The repository currently contains the canonical Plymouth boot, reboot and shutdo
 
 The theme installs to:
 
-```
+```text
 /usr/share/plymouth/themes/infiltrator-os/
 ```
 
-It uses a single static Infiltrator Operating System image. There are no generated animation frames and no alternative artwork.
+It uses one static Infiltrator Operating System image derived only from the supplied approved artwork. There are no generated animation frames and no alternative artwork.
 
 Installation normalises Plymouth selection through `/etc/plymouth/plymouthd.conf`, uses Debian's `plymouth-set-default-theme` when available, keeps the Ubuntu/Linux Mint `default.plymouth` alternative pointed at the same canonical theme for compatibility, ensures `quiet splash` is present for GRUB systems, and rebuilds initramfs.
 
@@ -28,4 +28,4 @@ GitHub Actions builds the DEB automatically on every push to `main` and on manua
 
 ## Source artwork
 
-`assets/infiltrator-os.png.b64.part-*` is a base64-split copy of the approved Infiltrator Operating System image, resized only for the Plymouth splash. The build script reconstructs exactly one PNG from those parts.
+The files `assets/infiltrator-os.png.b64.chunk-*` are ordered base64 chunks of the approved Infiltrator Operating System image, resized for the small Plymouth splash. The build script reconstructs exactly one PNG from those chunks.
