@@ -1,0 +1,55 @@
+#!/bin/sh
+set -eu
+
+THEME="infiltrator-os"
+THEME_DIR="/usr/share/plymouth/themes/$THEME"
+PLYMOUTH_FILE="$THEME_DIR/$THEME.plymouth"
+PLYMOUTH_CONF="/etc/plymouth/plymouthd.conf"
+
+mkdir -p /etc/plymouth
+
+if [ ! -f "$PLYMOUTH_CONF" ]; then
+    printf '[Daemon]\nTheme=%s\n' "$THEME" > "$PLYMOUTH_CONF"
+elif grep -q '^[[:space:]]*Theme[[:space:]]*=' "$PLYMOUTH_CONF"; then
+    sed -i "s|^[[:space:]]*Theme[[:space:]]*=.*|Theme=$THEME|" "$PLYMOUTH_CONF"
+elif grep -q '^[[:space:]]*\[Daemon\][[:space:]]*$' "$PLYMOUTH_CONF"; then
+    sed -i "/^[[:space:]]*\[Daemon\][[:space:]]*$/a Theme=$THEME" "$PLYMOUTH_CONF"
+else
+    printf '\n[Daemon]\nTheme=%s\n' "$THEME" >> "$PLYMOUTH_CONF"
+fi
+
+if command -v plymouth-set-default-theme >/dev/null 2>&1; then
+    plymouth-set-default-theme "$THEME" || true
+fi
+
+if command -v update-alternatives >/dev/null 2>&1; then
+    update-alternatives --install \
+        /usr/share/plymouth/themes/default.plymouth \
+        default.plymouth \
+        "$PLYMOUTH_FILE" \
+        250 >/dev/null 2>&1 || true
+
+    update-alternatives --set default.plymouth "$PLYMOUTH_FILE" >/dev/null 2>&1 || true
+fi
+
+if [ -f /etc/default/grub ] && command -v update-grub >/dev/null 2>&1; then
+    current="$(sed -n 's/^GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"/\1/p' /etc/default/grub | head -n1 || true)"
+    changed=0
+    case " $current " in *" quiet "*) ;; *) current="${current:+$current }quiet"; changed=1 ;; esac
+    case " $current " in *" splash "*) ;; *) current="${current:+$current }splash"; changed=1 ;; esac
+
+    if [ "$changed" -eq 1 ]; then
+        if grep -q '^GRUB_CMDLINE_LINUX_DEFAULT=' /etc/default/grub; then
+            sed -i "s|^GRUB_CMDLINE_LINUX_DEFAULT=.*|GRUB_CMDLINE_LINUX_DEFAULT=\"$current\"|" /etc/default/grub
+        else
+            printf '\nGRUB_CMDLINE_LINUX_DEFAULT="%s"\n' "$current" >> /etc/default/grub
+        fi
+        update-grub || true
+    fi
+fi
+
+if command -v update-initramfs >/dev/null 2>&1; then
+    update-initramfs -u -k all || true
+fi
+
+exit 0
