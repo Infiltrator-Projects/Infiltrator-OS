@@ -1,0 +1,11 @@
+Package: infiltrator-os-plymouth-theme
+Version: @VERSION@
+Section: misc
+Priority: optional
+Architecture: all
+Maintainer: Infiltrator Projects <noreply@infiltrator-projects.invalid>
+Depends: plymouth
+Description: Infiltrator OS Plymouth boot and shutdown theme
+ Installs the canonical Infiltrator OS Plymouth splash for Debian and
+ Linux Mint derived systems, selects it as the active theme and rebuilds
+ initramfs.
