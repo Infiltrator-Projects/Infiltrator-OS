@@ -2,7 +2,7 @@
 
 Infiltrator OS is the operating-system project for Infiltrator Projects.
 
-The repository currently contains the canonical Plymouth boot, reboot and shutdown branding package for Debian and Linux Mint derived installations.
+This repository currently contains the canonical Plymouth boot, reboot and shutdown branding package for Debian and Linux Mint derived installations.
 
 ## Plymouth theme
 
@@ -26,6 +26,6 @@ The package is written to `dist/`.
 
 GitHub Actions builds the DEB automatically on every push to `main` and on manual workflow runs. A tag matching `v*` also publishes the built DEB as a GitHub release asset.
 
-## Source artwork
+## Artwork
 
-The files `assets/infiltrator-os.png.b64.chunk-*` are ordered base64 chunks of the approved Infiltrator Operating System image, resized for the small Plymouth splash. The build script reconstructs exactly one PNG from those chunks.
+`assets/infiltrator-os.png` is the sole Plymouth artwork used by this package. The build verifies its SHA-256 before packaging so an accidental artwork change cannot silently enter a release.

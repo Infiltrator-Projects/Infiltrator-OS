@@ -7,9 +7,13 @@ DIST="$ROOT/dist"
 WORK="$ROOT/.build/infiltrator-os-plymouth-theme_${VERSION}"
 PKGROOT="$WORK/root"
 THEME_DIR="$PKGROOT/usr/share/plymouth/themes/infiltrator-os"
+ARTWORK="$ROOT/assets/infiltrator-os.png"
+ARTWORK_SHA256="4820891225675ed9bb0bb1bb82e3680df4bbdccc736ce5d092b80e95e5d05978"
 
 rm -rf "$WORK"
 mkdir -p "$PKGROOT/DEBIAN" "$THEME_DIR" "$DIST"
+
+printf '%s  %s\n' "$ARTWORK_SHA256" "$ARTWORK" | sha256sum -c -
 
 sed "s/@VERSION@/$VERSION/g" "$ROOT/debian/control.in" > "$PKGROOT/DEBIAN/control"
 install -m 0755 "$ROOT/debian/postinst" "$PKGROOT/DEBIAN/postinst"
@@ -17,13 +21,11 @@ install -m 0755 "$ROOT/debian/prerm" "$PKGROOT/DEBIAN/prerm"
 
 install -m 0644 "$ROOT/plymouth/infiltrator-os.plymouth" "$THEME_DIR/infiltrator-os.plymouth"
 install -m 0644 "$ROOT/plymouth/infiltrator-os.script" "$THEME_DIR/infiltrator-os.script"
-
-cat "$ROOT"/assets/infiltrator-os.png.b64.chunk-* | base64 -d > "$THEME_DIR/infiltrator-os.png"
-chmod 0644 "$THEME_DIR/infiltrator-os.png"
+install -m 0644 "$ARTWORK" "$THEME_DIR/infiltrator-os.png"
 
 PNG_TYPE="$(file -b --mime-type "$THEME_DIR/infiltrator-os.png")"
 if [ "$PNG_TYPE" != "image/png" ]; then
-    echo "Reconstructed artwork is not a PNG: $PNG_TYPE" >&2
+    echo "Artwork is not a PNG: $PNG_TYPE" >&2
     exit 1
 fi
 
