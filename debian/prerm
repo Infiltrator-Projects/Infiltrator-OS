@@ -1,0 +1,12 @@
+#!/bin/sh
+set -eu
+
+THEME_FILE="/usr/share/plymouth/themes/infiltrator-os/infiltrator-os.plymouth"
+
+if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
+    if command -v update-alternatives >/dev/null 2>&1; then
+        update-alternatives --remove default.plymouth "$THEME_FILE" >/dev/null 2>&1 || true
+    fi
+fi
+
+exit 0
