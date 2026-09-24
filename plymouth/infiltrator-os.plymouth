@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Infiltrator OS
+Description=Infiltrator OS boot, reboot and shutdown splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/infiltrator-os
+ScriptFile=/usr/share/plymouth/themes/infiltrator-os/infiltrator-os.script
