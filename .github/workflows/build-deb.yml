@@ -33,8 +33,10 @@ jobs:
         shell: bash
         run: |
           sh -n scripts/build-deb.sh scripts/install-os.sh debian/postinst debian/prerm
-          dpkg-deb --info dist/*.deb
-          dpkg-deb --contents dist/*.deb
+          for package in dist/*.deb; do
+            dpkg-deb --info "$package"
+            dpkg-deb --contents "$package"
+          done
           test "$(dpkg-deb -f "dist/infiltrator-os_${VERSION}_all.deb" Package)" = infiltrator-os
           test "$(dpkg-deb -f "dist/infiltrator-os_${VERSION}_all.deb" Version)" = "$VERSION"
           test "$(dpkg-deb -f "dist/infiltrator-os_${VERSION}_all.deb" Depends | tr ',' '\n' | wc -l)" -eq 9
