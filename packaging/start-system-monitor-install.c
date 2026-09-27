@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #define _POSIX_C_SOURCE 200809L
 #include <ctype.h>
 #include <dirent.h>
@@ -132,9 +133,20 @@ static bool session_from_process(const char *pid_name, DesktopSession *session)
     if (!candidate.runtime[0])
         snprintf(candidate.runtime, sizeof(candidate.runtime), "/run/user/%lu",
                  (unsigned long)candidate.uid);
-    if (!candidate.bus[0])
-        snprintf(candidate.bus, sizeof(candidate.bus), "unix:path=%s/bus",
-                 candidate.runtime);
+    if (!candidate.bus[0]) {
+        static const char prefix[] = "unix:path=";
+        static const char suffix[] = "/bus";
+        const size_t runtime_length = strlen(candidate.runtime);
+        const size_t total = (sizeof(prefix) - 1U) + runtime_length +
+                             (sizeof(suffix) - 1U) + 1U;
+        if (total > sizeof(candidate.bus)) return false;
+        char *cursor = candidate.bus;
+        memcpy(cursor, prefix, sizeof(prefix) - 1U);
+        cursor += sizeof(prefix) - 1U;
+        memcpy(cursor, candidate.runtime, runtime_length);
+        cursor += runtime_length;
+        memcpy(cursor, suffix, sizeof(suffix));
+    }
     candidate.found = true;
     *session = candidate;
     return true;
@@ -184,7 +196,7 @@ static void spawn_worker(void)
         pid_t second = fork();
         if (second < 0) _exit(121);
         if (second > 0) _exit(0);
-        (void)chdir("/");
+        if (chdir("/") != 0) _exit(122);
         redirect_worker_io();
         close_extra_fds();
         execl(WORKER, WORKER, (char *)NULL);
