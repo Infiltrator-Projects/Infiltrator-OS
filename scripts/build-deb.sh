@@ -2,7 +2,7 @@
 set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-1.0.1}"
 DIST="$ROOT/dist"
 WORK="$ROOT/.build/infiltrator-os-plymouth-theme_${VERSION}"
 PKGROOT="$WORK/root"
@@ -19,9 +19,12 @@ sed "s/@VERSION@/$VERSION/g" "$ROOT/debian/control.in" > "$PKGROOT/DEBIAN/contro
 install -m 0755 "$ROOT/debian/postinst" "$PKGROOT/DEBIAN/postinst"
 install -m 0755 "$ROOT/debian/prerm" "$PKGROOT/DEBIAN/prerm"
 
-install -m 0644 "$ROOT/plymouth/infiltrator-os.plymouth" "$THEME_DIR/infiltrator-os.plymouth"
-install -m 0644 "$ROOT/plymouth/infiltrator-os.script" "$THEME_DIR/infiltrator-os.script"
-install -m 0644 "$ARTWORK" "$THEME_DIR/infiltrator-os.png"
+cc -std=c11 -O2 -Wall -Wextra -Werror \
+    "$ROOT/packaging/stage-theme.c" -o "$WORK/stage-theme"
+"$WORK/stage-theme" \
+    "$ROOT/plymouth/infiltrator-os.plymouth" \
+    "$ROOT/plymouth/infiltrator-os.script" \
+    "$ARTWORK" "$THEME_DIR"
 
 PNG_TYPE="$(file -b --mime-type "$THEME_DIR/infiltrator-os.png")"
 if [ "$PNG_TYPE" != "image/png" ]; then
