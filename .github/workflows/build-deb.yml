@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -22,13 +20,9 @@ jobs:
       - name: Determine package version
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-            echo "RELEASE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
-          else
-            echo "VERSION=1.0.0" >> "$GITHUB_ENV"
-            echo "RELEASE_TAG=v1.0.0" >> "$GITHUB_ENV"
-          fi
+          version="$(cat VERSION)"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=v$version" >> "$GITHUB_ENV"
 
       - name: Build package
         shell: bash
@@ -38,26 +32,37 @@ jobs:
       - name: Inspect package
         shell: bash
         run: |
+          sh -n scripts/build-deb.sh scripts/install-os.sh debian/postinst debian/prerm
           dpkg-deb --info dist/*.deb
           dpkg-deb --contents dist/*.deb
+          test "$(dpkg-deb -f "dist/infiltrator-os_${VERSION}_all.deb" Package)" = infiltrator-os
+          test "$(dpkg-deb -f "dist/infiltrator-os_${VERSION}_all.deb" Version)" = "$VERSION"
+          test "$(dpkg-deb -f "dist/infiltrator-os_${VERSION}_all.deb" Depends | tr ',' '\n' | wc -l)" -eq 9
 
-      - name: Upload DEB artifact
+      - name: Package source
+        shell: bash
+        run: git archive --format=zip --prefix="infiltrator-os-${VERSION}/" HEAD > "dist/infiltrator-os-${VERSION}-source.zip"
+
+      - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: infiltrator-os-plymouth-theme-${{ env.VERSION }}
-          path: dist/*.deb
+          name: infiltrator-os-${{ env.VERSION }}
+          path: |
+            dist/*.deb
+            dist/*.run
+            dist/*.zip
           if-no-files-found: error
 
       - name: Publish GitHub release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" dist/*.deb --clobber
+            echo "Release $RELEASE_TAG already exists; bump VERSION for another release."
           else
-            gh release create "$RELEASE_TAG" dist/*.deb \
+            gh release create "$RELEASE_TAG" dist/*.deb dist/*.run dist/*.zip \
               --target "$GITHUB_SHA" \
               --title "Infiltrator OS $RELEASE_TAG" \
               --generate-notes
