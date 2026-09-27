@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -14,9 +15,34 @@
 #define RELEASE_PREFIX "https://github.com/Infiltrator-Projects/System-Monitor/releases/download/"
 #define PATH_LEN 4096
 #define JSON_LIMIT (4U * 1024U * 1024U)
+#define STATUS_DIR "/run/infiltrator-os"
+#define STATUS_PATH STATUS_DIR "/system-monitor-install.status"
+#define LOCK_PATH "/run/lock/infiltrator-os-system-monitor.lock"
+
+static void write_status(const char *state, int progress,
+                         const char *stage, const char *detail)
+{
+    (void)mkdir(STATUS_DIR, 0755);
+    char temporary[PATH_LEN];
+    if (snprintf(temporary, sizeof(temporary), STATUS_PATH ".%ld.tmp",
+                 (long)getpid()) >= (int)sizeof(temporary))
+        return;
+    FILE *file = fopen(temporary, "w");
+    if (!file) return;
+    fprintf(file, "state=%s\nprogress=%d\nstage=%s\ndetail=%s\n",
+            state ? state : "running", progress,
+            stage ? stage : "", detail ? detail : "");
+    if (fclose(file) == 0) {
+        (void)chmod(temporary, 0644);
+        (void)rename(temporary, STATUS_PATH);
+    } else {
+        (void)unlink(temporary);
+    }
+}
 
 static void fail(const char *message)
 {
+    write_status("failed", 100, "System Monitor installation failed", message);
     fprintf(stderr, "Infiltrator OS System Monitor setup: %s\n", message);
     exit(EXIT_FAILURE);
 }
@@ -51,6 +77,10 @@ static void required(const char *const argv[])
 {
     int rc = run(argv, false);
     if (rc != 0) {
+        char detail[PATH_LEN];
+        (void)snprintf(detail, sizeof(detail),
+                       "A required command failed (%d): %s", rc, argv[0]);
+        write_status("failed", 100, "System Monitor installation failed", detail);
         fprintf(stderr, "Infiltrator OS System Monitor setup: command failed (%d): %s\n",
                 rc, argv[0]);
         exit(EXIT_FAILURE);
@@ -176,6 +206,18 @@ static bool file_contains(const char *path, const char *needle)
 int main(void)
 {
     if (geteuid() != 0) fail("must run as root");
+    (void)mkdir(STATUS_DIR, 0755);
+
+    int lock_fd = open(LOCK_PATH, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+    if (lock_fd < 0) fail("cannot create installation lock");
+    if (flock(lock_fd, LOCK_EX | LOCK_NB) != 0) {
+        puts("A System Monitor native installation is already running.");
+        close(lock_fd);
+        return EXIT_SUCCESS;
+    }
+
+    write_status("running", 5, "Waiting for the package manager",
+                 "The native build will begin as soon as the package transaction has finished.");
     if (access("/usr/bin/apt-get", X_OK) != 0 ||
         access("/usr/bin/dpkg-query", X_OK) != 0 ||
         access("/usr/bin/wget", X_OK) != 0)
@@ -188,6 +230,9 @@ int main(void)
         "/usr/bin/apt-get", "-o", "DPkg::Lock::Timeout=300", "check", NULL
     };
     required(wait_argv);
+
+    write_status("running", 12, "Checking the latest System Monitor release",
+                 "Infiltrator OS is selecting the newest published native installer.");
 
     char work[] = "/tmp/infiltrator-system-monitor-XXXXXX";
     if (!mkdtemp(work)) fail("cannot create temporary working directory");
@@ -211,6 +256,8 @@ int main(void)
     free(json);
     if (!found) fail("latest System Monitor release has no trusted native installer asset");
 
+    write_status("running", 22, "Downloading System Monitor",
+                 "Downloading the latest native installer from Infiltrator Projects.");
     printf("Downloading latest System Monitor native installer:\n  %s\n", url);
     const char *const download_argv[] = {
         "/usr/bin/wget", "--quiet", "--https-only", "--secure-protocol=TLSv1_2",
@@ -220,12 +267,19 @@ int main(void)
     if (chmod(installer_path, 0700) != 0)
         fail("cannot mark native installer executable");
 
+    write_status("running", 35, "Compiling and optimising System Monitor",
+                 "Building for this CPU with aggressive native optimisation, LTO and two-pass PGO.");
     const char *const install_argv[] = {
         installer_path, "--profile", "aggressive", "--system-package-mode", NULL
     };
     required(install_argv);
 
+    write_status("running", 88, "Removing replaced System Monitor packages",
+                 "Cleaning up distribution System Monitor packages after the native build succeeded.");
     purge_stock_monitors();
+
+    write_status("running", 95, "Verifying the native installation",
+                 "Checking that the installed build is aggressive, PGO-trained and CPU-native.");
 
     if (!installed("infiltrator-system-monitor"))
         fail("native System Monitor package is not installed after the build");
@@ -239,6 +293,9 @@ int main(void)
     unlink(installer_path);
     unlink(json_path);
     rmdir(work);
+    write_status("complete", 100, "System Monitor native installation complete",
+                 "The latest System Monitor is installed and optimised for this computer.");
     puts("Infiltrator OS System Monitor replacement completed successfully.");
+    close(lock_fd);
     return EXIT_SUCCESS;
 }

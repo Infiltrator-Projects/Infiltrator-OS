@@ -19,6 +19,12 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
+      - name: Install package build dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libgtk-3-dev
+
       - name: Determine package version
         shell: bash
         run: |
@@ -26,8 +32,8 @@ jobs:
             echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
             echo "RELEASE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
           else
-            echo "VERSION=1.0.2" >> "$GITHUB_ENV"
-            echo "RELEASE_TAG=v1.0.2" >> "$GITHUB_ENV"
+            echo "VERSION=1.0.3" >> "$GITHUB_ENV"
+            echo "RELEASE_TAG=v1.0.3" >> "$GITHUB_ENV"
           fi
 
       - name: Build package
@@ -55,7 +61,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            if [[ "$GITHUB_REF" == refs/heads/main && "$RELEASE_TAG" == v1.0.2 ]]; then
+            if [[ "$GITHUB_REF" == refs/heads/main && "$RELEASE_TAG" == v1.0.3 ]]; then
               gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$RELEASE_TAG" \
                 -f sha="$GITHUB_SHA" -F force=true
               gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA"

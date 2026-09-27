@@ -40,3 +40,9 @@ Version 1.0.2 adds Debian/Linux Mint System Monitor replacement. Installing the 
 The System Monitor native installer therefore compiles on the target machine with the aggressive profile: `-O3`, target-machine ISA/tuning, LTO and measured two-pass PGO. In OS package mode it replaces an existing `infiltrator-system-monitor` package immediately before installing the newly built local package. After the local installation succeeds, the Infiltrator OS worker removes installed Debian/Mint desktop System Monitor packages such as GNOME, MATE, Xfce, Plasma, LXDE and QPS variants.
 
 No System Monitor release number is embedded in Infiltrator OS; the latest published release is resolved at installation time.
+
+## Version 1.0.3 installation experience
+
+Version 1.0.3 removes the transient randomly named `systemd-run` unit used by 1.0.2. The package now starts a detached native C worker directly after the package transaction, keeps a stable lock and status file under `/run/infiltrator-os`, and writes the full worker log to `/var/log/infiltrator-os-system-monitor.log`.
+
+When a graphical desktop session is active, a small native GTK progress window follows that status file and shows the installation stages directly to the user: waiting for the package manager, checking the latest release, downloading, compiling and optimising, cleaning up replaced monitor packages, verifying the aggressive native build, and completion or failure. The System Monitor build still uses the latest published native installer dynamically with `--profile aggressive --system-package-mode`; the user no longer needs to know about or inspect a background service to understand whether the operation is running or has failed.
