@@ -12,6 +12,7 @@ ARTWORK_SHA256="4820891225675ed9bb0bb1bb82e3680df4bbdccc736ce5d092b80e95e5d05978
 
 rm -rf "$WORK"
 mkdir -p "$PKGROOT/DEBIAN" "$THEME_DIR" "$DIST"
+mkdir -p "$PKGROOT/usr/lib/infiltrator-os"
 
 printf '%s  %s\n' "$ARTWORK_SHA256" "$ARTWORK" | sha256sum -c -
 
@@ -26,13 +27,17 @@ cc -std=c11 -O2 -Wall -Wextra -Werror \
     "$ROOT/plymouth/infiltrator-os.script" \
     "$ARTWORK" "$THEME_DIR"
 
+cc -std=c11 -O2 -Wall -Wextra -Werror \
+    "$ROOT/packaging/select-theme.c" \
+    -o "$PKGROOT/usr/lib/infiltrator-os/select-theme"
+
 PNG_TYPE="$(file -b --mime-type "$THEME_DIR/infiltrator-os.png")"
 if [ "$PNG_TYPE" != "image/png" ]; then
     echo "Artwork is not a PNG: $PNG_TYPE" >&2
     exit 1
 fi
 
-OUT="$DIST/infiltrator-os-plymouth-theme_${VERSION}_all.deb"
+OUT="$DIST/infiltrator-os-plymouth-theme_${VERSION}_amd64.deb"
 rm -f "$OUT"
 dpkg-deb --root-owner-group --build "$PKGROOT" "$OUT"
 

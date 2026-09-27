@@ -55,6 +55,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            if [[ "$GITHUB_REF" == refs/heads/main && "$RELEASE_TAG" == v1.0.1 ]]; then
+              gh api -X PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/$RELEASE_TAG" \
+                -f sha="$GITHUB_SHA" -F force=true
+              gh release edit "$RELEASE_TAG" --target "$GITHUB_SHA"
+              gh release delete-asset "$RELEASE_TAG" "infiltrator-os-plymouth-theme_${VERSION}_all.deb" -y || true
+            fi
             gh release upload "$RELEASE_TAG" dist/*.deb --clobber
           else
             gh release create "$RELEASE_TAG" dist/*.deb \

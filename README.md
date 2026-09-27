@@ -14,7 +14,7 @@ The theme installs to:
 
 It uses one static Infiltrator Operating System image derived only from the supplied approved artwork. There are no generated animation frames and no alternative artwork.
 
-During package construction, `packaging/stage-theme.c` places the PNG and Plymouth descriptors in the DEB payload. The build verifies the artwork SHA-256 first. Debian then extracts those exact files on installation; Plymouth still centres and displays the image with its theme script.
+During package construction, `packaging/stage-theme.c` places the PNG and Plymouth descriptors in the DEB payload. The build verifies the artwork SHA-256 first. Debian then extracts those exact files on installation. The installed C helper configures Plymouth for Debian and Linux Mint, adds `quiet splash` if needed, rebuilds GRUB and initramfs, and removes the alternative on package removal. Plymouth centres and displays the same image at boot and shutdown.
 
 Installation normalises Plymouth selection through `/etc/plymouth/plymouthd.conf`, uses Debian's `plymouth-set-default-theme` when available, keeps the Ubuntu/Linux Mint `default.plymouth` alternative pointed at the same canonical theme for compatibility, ensures `quiet splash` is present for GRUB systems, and rebuilds initramfs.
 
