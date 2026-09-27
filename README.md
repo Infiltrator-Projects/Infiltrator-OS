@@ -2,28 +2,7 @@
 
 Infiltrator OS is the operating-system project for Infiltrator Projects.
 
-This repository assembles the released Infiltrator OS desktop components for Debian-family amd64 installations. It builds an `infiltrator-os` dependency bundle, the Plymouth boot theme, and a native installer.
-
-## Components
-
-The `infiltrator-os` package installs InfiltratorFS, Filesystem Support, Software, System Settings, Calendar, System Monitor, Defragmenter, Calculator, and the Plymouth theme. APT resolves the current versions from the Infiltrator repository. The bundle installs applications and filesystem tools; it does not change the root filesystem or replace the distribution kernel.
-
-## Install
-
-If the Infiltrator beta APT source is already configured:
-
-```bash
-sudo apt update
-sudo apt install infiltrator-os
-```
-
-The release also includes a native `.run` installer. To configure the current unsigned beta APT source explicitly and then install the bundle:
-
-```bash
-sudo ./infiltrator-os-1.1.0-linux-native.run --enable-beta-repository
-```
-
-The beta source currently uses APT's `trusted=yes` setting. The installer leaves existing APT source files alone and writes only `/etc/apt/sources.list.d/infiltrator-beta.list` when the option is given. Future signed repository support should replace that trust setting.
+This repository currently contains the canonical Plymouth boot, reboot and shutdown branding package for Debian and Linux Mint derived installations.
 
 ## Plymouth theme
 
@@ -43,9 +22,9 @@ Installation normalises Plymouth selection through `/etc/plymouth/plymouthd.conf
 bash scripts/build-deb.sh
 ```
 
-Both Debian packages and the native installer are written to `dist/`.
+The package is written to `dist/`.
 
-GitHub Actions builds and checks the packages on every push to `main` and on manual workflow runs. The first successful push of a new `VERSION` publishes the DEBs, native installer and source ZIP as release assets. Bump `VERSION` for each later release.
+GitHub Actions builds the DEB automatically on every push to `main` and on manual workflow runs. A tag matching `v*` also publishes the built DEB as a GitHub release asset.
 
 ## Artwork
 
