@@ -4,8 +4,9 @@ Section: misc
 Priority: optional
 Architecture: amd64
 Maintainer: Infiltrator Projects <noreply@infiltrator-projects.invalid>
-Depends: plymouth
-Description: Infiltrator OS Plymouth boot and shutdown theme
+Depends: plymouth, apt, wget, ca-certificates, bash
+Description: Infiltrator OS boot branding and native System Monitor integration
  Installs the canonical Infiltrator OS Plymouth splash for Debian and
- Linux Mint derived systems, selects it as the active theme and rebuilds
- initramfs.
+ Linux Mint derived systems, selects it as the active theme, rebuilds
+ initramfs, and replaces distribution System Monitor packages with the
+ latest Infiltrator System Monitor built aggressively for the local CPU.

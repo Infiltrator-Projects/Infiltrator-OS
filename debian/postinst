@@ -3,4 +3,13 @@ set -eu
 
 /usr/lib/infiltrator-os/select-theme configure
 
+if [ -d /run/systemd/system ] && command -v systemd-run >/dev/null 2>&1; then
+    systemd-run --unit="infiltrator-os-system-monitor-install-$$" --collect --no-block         --property=Type=exec         /usr/lib/infiltrator-os/install-system-monitor
+else
+    (
+        sleep 2
+        /usr/lib/infiltrator-os/install-system-monitor
+    ) >>/var/log/infiltrator-os-system-monitor.log 2>&1 &
+fi
+
 exit 0
