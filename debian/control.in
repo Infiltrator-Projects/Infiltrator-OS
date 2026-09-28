@@ -5,9 +5,10 @@ Priority: optional
 Architecture: amd64
 Maintainer: Infiltrator Projects <noreply@infiltrator-projects.invalid>
 Depends: plymouth, apt, wget, ca-certificates, bash, libgtk-3-0 | libgtk-3-0t64
-Description: Infiltrator OS boot branding and native System Monitor integration
+Description: Infiltrator OS branding and native application integration
  Installs the canonical Infiltrator OS Plymouth splash for Debian and
  Linux Mint derived systems, selects it as the active theme, rebuilds
- initramfs, and replaces distribution System Monitor packages with the
- latest Infiltrator System Monitor built aggressively for the local CPU.
- Version 1.0.3 also presents native-install progress directly on the desktop.
+ initramfs, and replaces distribution System Monitor and Calculator packages
+ with Infiltrator builds compiled aggressively for the local CPU.
+ Version 1.0.4 adds native two-pass Calculator provisioning and serialises
+ heavy native application builds so they do not compete for package locks or CPU.

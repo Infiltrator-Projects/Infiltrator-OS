@@ -17,7 +17,8 @@
 #define JSON_LIMIT (4U * 1024U * 1024U)
 #define STATUS_DIR "/run/infiltrator-os"
 #define STATUS_PATH STATUS_DIR "/system-monitor-install.status"
-#define LOCK_PATH "/run/lock/infiltrator-os-system-monitor.lock"
+#define APP_LOCK_PATH "/run/lock/infiltrator-os-system-monitor.lock"
+#define GLOBAL_LOCK_PATH "/run/lock/infiltrator-os-native-install.lock"
 
 static void write_status(const char *state, int progress,
                          const char *stage, const char *detail)
@@ -208,12 +209,23 @@ int main(void)
     if (geteuid() != 0) fail("must run as root");
     (void)mkdir(STATUS_DIR, 0755);
 
-    int lock_fd = open(LOCK_PATH, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
-    if (lock_fd < 0) fail("cannot create installation lock");
-    if (flock(lock_fd, LOCK_EX | LOCK_NB) != 0) {
+    int app_lock_fd = open(APP_LOCK_PATH, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+    if (app_lock_fd < 0) fail("cannot create System Monitor installation lock");
+    if (flock(app_lock_fd, LOCK_EX | LOCK_NB) != 0) {
         puts("A System Monitor native installation is already running.");
-        close(lock_fd);
+        close(app_lock_fd);
         return EXIT_SUCCESS;
+    }
+
+    int global_lock_fd = open(GLOBAL_LOCK_PATH, O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+    if (global_lock_fd < 0) fail("cannot create global native installation lock");
+    write_status("queued", 2, "Waiting for another native installation",
+                 "System Monitor will start as soon as the current Infiltrator native build has finished.");
+    while (flock(global_lock_fd, LOCK_EX) != 0) {
+        if (errno == EINTR) continue;
+        close(global_lock_fd);
+        close(app_lock_fd);
+        fail("cannot acquire global native installation lock");
     }
 
     write_status("running", 5, "Waiting for the package manager",
@@ -296,6 +308,7 @@ int main(void)
     write_status("complete", 100, "System Monitor native installation complete",
                  "The latest System Monitor is installed and optimised for this computer.");
     puts("Infiltrator OS System Monitor replacement completed successfully.");
-    close(lock_fd);
+    close(global_lock_fd);
+    close(app_lock_fd);
     return EXIT_SUCCESS;
 }

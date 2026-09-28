@@ -3,5 +3,6 @@ set -eu
 
 /usr/lib/infiltrator-os/select-theme configure
 /usr/lib/infiltrator-os/start-system-monitor-install
+/usr/lib/infiltrator-os/start-calculator-install
 
 exit 0

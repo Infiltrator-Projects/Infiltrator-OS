@@ -2,7 +2,7 @@
 set -eu
 
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
-VERSION="${VERSION:-1.0.3}"
+VERSION="${VERSION:-1.0.4}"
 DIST="$ROOT/dist"
 WORK="$ROOT/.build/infiltrator-os-plymouth-theme_${VERSION}"
 PKGROOT="$WORK/root"
@@ -39,12 +39,25 @@ cc -std=c11 -O2 -Wall -Wextra -Werror -Wpedantic \
     "$ROOT/packaging/start-system-monitor-install.c" \
     -o "$PKGROOT/usr/lib/infiltrator-os/start-system-monitor-install"
 
+cc -std=c11 -O2 -Wall -Wextra -Werror -Wpedantic \
+    "$ROOT/packaging/install-calculator.c" \
+    -o "$PKGROOT/usr/lib/infiltrator-os/install-calculator"
+
+cc -std=c11 -O2 -Wall -Wextra -Werror -Wpedantic \
+    "$ROOT/packaging/start-calculator-install.c" \
+    -o "$PKGROOT/usr/lib/infiltrator-os/start-calculator-install"
+
 GTK_CFLAGS="$(pkg-config --cflags gtk+-3.0)"
 GTK_LIBS="$(pkg-config --libs gtk+-3.0)"
 # shellcheck disable=SC2086
 cc -std=c11 -O2 -Wall -Wextra -Werror -Wpedantic $GTK_CFLAGS \
     "$ROOT/packaging/system-monitor-progress.c" \
     -o "$PKGROOT/usr/lib/infiltrator-os/system-monitor-progress" $GTK_LIBS
+
+# shellcheck disable=SC2086
+cc -std=c11 -O2 -Wall -Wextra -Werror -Wpedantic $GTK_CFLAGS \
+    "$ROOT/packaging/calculator-progress.c" \
+    -o "$PKGROOT/usr/lib/infiltrator-os/calculator-progress" $GTK_LIBS
 
 PNG_TYPE="$(file -b --mime-type "$THEME_DIR/infiltrator-os.png")"
 if [ "$PNG_TYPE" != "image/png" ]; then
